@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCP Prayers of the People Weaver</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bcp: {
+                            maroon: '#5B0015',
+                            darkMaroon: '#3D000E',
+                            lightMaroon: '#7A001C',
+                            cream: '#FDFBF7',
+                            paper: '#F7F3E9',
+                            gold: '#C5A059',
+                            rubric: '#8B0000',
+                            text: '#2C2A29'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['EB Garamond', 'Garamond', 'Georgia', 'serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts for EB Garamond -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #FDFBF7;
+            color: #2C2A29;
+            font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+        }
+        .rubric {
+            color: #8B0000;
+            font-style: italic;
+            font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+        }
+        .bcp-box {
+            background-color: #F7F3E9;
+            border: 1px solid #C5A059;
+        }
+        /* Custom scrollbar for print/preview panels */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FDFBF7;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #C5A059;
+            border-radius: 4px;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+            }
+            .paper-sheet {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-bcp-cream text-bcp-text">
+
+    <!-- Header / Navigation Bar -->
+    <header class="bg-bcp-maroon text-bcp-cream shadow-md border-b-2 border-bcp-gold no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3 text-center sm:text-left">
+                <div class="w-10 h-10 rounded-full border-2 border-bcp-gold flex items-center justify-center font-serif text-2xl font-bold bg-bcp-darkMaroon">
+                    ✠
+                </div>
+                <div>
+                    <h1 class="text-2xl font-serif font-bold tracking-wide text-bcp-cream">Prayers of the People Weaver</h1>
+                    <p class="text-xs font-sans text-bcp-gold tracking-wider uppercase">Book of Common Prayer 1979 • Forms I – VI</p>
+                </div>
+            </div>
+            
+            <!-- Quick Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2 font-sans text-xs">
+                <button onclick="saveCurrentToLocalStorage()" class="px-3 py-1.5 rounded bg-bcp-darkMaroon border border-bcp-gold hover:bg-bcp-lightMaroon transition text-bcp-cream flex items-center gap-1">
+                    💾 Auto-Saved
+                </button>
+                <button onclick="openShareModal()" class="px-3 py-1.5 rounded bg-bcp-gold text-bcp-darkMaroon font-semibold hover:bg-yellow-500 transition flex items-center gap-1 shadow">
+                    🔗 Share Link / QR
+                </button>
+                <button onclick="exportDataJSON()" class="px-3 py-1.5 rounded border border-bcp-gold hover:bg-bcp-darkMaroon transition text-bcp-cream">
+                    📥 Export JSON
+                </button>
+                <label class="px-3 py-1.5 rounded border border-bcp-gold hover:bg-bcp-darkMaroon transition text-bcp-cream cursor-pointer">
+                    📤 Import JSON
+                    <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
+                </label>
+                <button onclick="window.print()" class="px-3 py-1.5 rounded bg-bcp-cream text-bcp-maroon font-semibold hover:bg-white transition flex items-center gap-1 shadow">
+                    🖨️ Print
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Alert Banner for notifications -->
+    <div id="toastNotification" class="fixed bottom-4 right-4 bg-bcp-darkMaroon text-bcp-cream border border-bcp-gold px-4 py-3 rounded shadow-xl transition-all duration-300 opacity-0 transform translate-y-4 pointer-events-none z-50 font-sans text-sm flex items-center gap-2">
+        <span id="toastIcon">✨</span>
+        <span id="toastMessage">Notification message</span>
+    </div>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row gap-8">
+        
+        <!-- Left Panel: Form Selection & Prayer List Input (no-print) -->
+        <section class="lg:w-1/2 flex flex-col gap-6 no-print">
+            
+            <!-- Parish Profile / Preset Selector -->
+            <div class="bcp-box p-4 rounded-lg shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <label class="font-sans text-xs font-bold uppercase tracking-wider text-bcp-maroon flex items-center gap-1">
+                        🏛️ Parish Profile / Preset
+                    </label>
+                    <span class="text-xs font-sans text-gray-500" id="saveStatusIndicator">Auto-saved to browser</span>
+                </div>
+                <div class="flex gap-2">
+                    <select id="presetSelect" onchange="loadSelectedPreset()" class="flex-1 font-sans text-sm bg-white border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-bcp-maroon focus:outline-none">
+                        <option value="default">Default Parish List</option>
+                    </select>
+                    <button onclick="saveNewPreset()" class="px-3 py-2 bg-bcp-maroon text-bcp-cream rounded font-sans text-xs font-semibold hover:bg-bcp-lightMaroon transition whitespace-nowrap">
+                        + Save Preset
+                    </button>
+                    <button onclick="deleteCurrentPreset()" title="Delete active preset" class="px-3 py-2 bg-red-100 text-red-800 rounded font-sans text-xs hover:bg-red-200 transition">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form Selector & Controls -->
+            <div class="bcp-box p-5 rounded-lg shadow-sm space-y-4">
+                <h2 class="font-serif font-bold text-xl text-bcp-maroon border-b border-bcp-gold/40 pb-2">
+                    BCP Prayer Form & Rubric Options
+                </h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 font-sans text-sm">
+                    <button onclick="selectForm('form1')" id="btn-form1" class="form-btn py-2 px-3 rounded border border-bcp-gold text-center hover:bg-bcp-maroon hover:text-bcp-cream transition font-medium">Form I</button>
+                    <button onclick="selectForm('form2')" id="btn-form2" class="form-btn py-2 px-3 rounded border border-bcp-gold text-center hover:bg-bcp-maroon hover:text-bcp-cream transition font-medium">Form II</button>
+                    <button onclick="selectForm('form3')" id="btn-form3" class="form-btn py-2 px-3 rounded border border-bcp-gold text-center hover:bg-bcp-maroon hover:text-bcp-cream transition font-medium">Form III</button>
+                    <button onclick="selectForm('form4')" id="btn-form4" class="form-btn py-2 px-3 rounded border border-bcp-gold text-center hover:bg-bcp-maroon hover:text-bcp-cream transition font-medium">Form IV</button>
+                    <button onclick="selectForm('form5')" id="btn-form5" class="form-btn py-2 px-3 rounded border border-bcp-gold text-center hover:bg-bcp-maroon hover:text-bcp-cream transition font-medium">Form V</button>
+                    <button onclick="selectForm('form6')" id="btn-form6" class="form-btn py-2 px-3 rounded border border-bcp-gold text-center hover:bg-bcp-maroon hover:text-bcp-cream transition font-medium">Form VI</button>
+                </div>
+
+                <!-- Form Specific Note -->
+                <div id="formDescription" class="rubric text-xs p-2.5 bg-bcp-cream/60 rounded border border-bcp-gold/30">
+                    Form III specifies fixed placement for Archbishop, Presiding Bishop, Diocesan Bishop, and Parish Clergy.
+                </div>
+            </div>
+
+            <!-- Interactive Intentions Editor -->
+            <div class="bcp-box p-5 rounded-lg shadow-sm space-y-4 flex-1">
+                <div class="flex justify-between items-center border-b border-bcp-gold/40 pb-2">
+                    <h2 class="font-serif font-bold text-xl text-bcp-maroon">
+                        Parish Prayer List Data
+                    </h2>
+                    <span class="font-sans text-xs text-bcp-rubric italic">Changes automatically update preview & storage</span>
+                </div>
+
+                <div class="space-y-3 font-sans text-sm max-h-[60vh] overflow-y-auto pr-1">
+                    
+                    <!-- Clergy & Leadership Section -->
+                    <div class="p-3 bg-white/80 rounded border border-gray-200 space-y-2">
+                        <label class="font-bold text-bcp-maroon text-xs uppercase tracking-wider block">Episcopal & Clergy Leadership</label>
+                        <div>
+                            <span class="text-xs text-gray-500">Archbishop / Presiding Bishop / Diocesan Bishop:</span>
+                            <input type="text" id="input-bishops" oninput="handleInputChange()" placeholder="Justin, Michael, and Douglas..." class="w-full mt-1 p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-bcp-maroon focus:outline-none">
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-500">Parish Clergy (Rectors, Priests, Deacons):</span>
+                            <input type="text" id="input-clergy" oninput="handleInputChange()" placeholder="Fr. Thomas, Mtr. Anne, and Deacon John..." class="w-full mt-1 p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-bcp-maroon focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Nation & Secular Authorities -->
+                    <div class="p-3 bg-white/80 rounded border border-gray-200 space-y-2">
+                        <label class="font-bold text-bcp-maroon text-xs uppercase tracking-wider block">Civil Leaders & World Peace</label>
+                        <input type="text" id="input-leaders" oninput="handleInputChange()" placeholder="Joe, the President; Eric, the Governor; and all elected officials..." class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-bcp-maroon focus:outline-none">
+                    </div>
+
+                    <!-- Sick, Suffering, and Need -->
+                    <div class="p-3 bg-white/80 rounded border border-gray-200 space-y-2">
+                        <label class="font-bold text-bcp-maroon text-xs uppercase tracking-wider block">Sick, Suffering, & In Any Need</label>
+                        <textarea id="input-sick" oninput="handleInputChange()" rows="3" placeholder="Mary, Robert, David, Sarah, and the Williams family..." class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-bcp-maroon focus:outline-none"></textarea>
+                    </div>
+
+                    <!-- Departed -->
+                    <div class="p-3 bg-white/80 rounded border border-gray-200 space-y-2">
+                        <label class="font-bold text-bcp-maroon text-xs uppercase tracking-wider block">The Faithful Departed</label>
+                        <input type="text" id="input-departed" oninput="handleInputChange()" placeholder="James, Elizabeth, and William..." class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-bcp-maroon focus:outline-none">
+                    </div>
+
+                    <!-- Special Thanksgiving / Celebrations -->
+                    <div class="p-3 bg-white/80 rounded border border-gray-200 space-y-2">
+                        <label class="font-bold text-bcp-maroon text-xs uppercase tracking-wider block">Thanksgivings & Birthdays / Anniversaries</label>
+                        <input type="text" id="input-thanksgivings" oninput="handleInputChange()" placeholder="For the birth of Lucas, and the birth of Jane..." class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-bcp-maroon focus:outline-none">
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right Panel: Live BCP Liturgical Preview (Printable Sheet) -->
+        <section class="lg:w-1/2 flex flex-col">
+            <div class="bg-white p-8 sm:p-10 rounded-lg shadow-xl border border-bcp-gold/50 flex-1 flex flex-col justify-between paper-sheet relative">
+                
+                <!-- Watermark Header for Page Sheet -->
+                <div class="text-center border-b-2 border-bcp-maroon pb-4 mb-6">
+                    <p class="rubric text-xs tracking-widest uppercase mb-1">Book of Common Prayer — Page 383</p>
+                    <h2 id="previewHeaderTitle" class="font-serif text-2xl font-bold text-bcp-maroon">Prayers of the People: Form III</h2>
+                    <p class="rubric text-sm mt-1">Intercessor leads petitions; Congregation responds.</p>
+                </div>
+
+                <!-- Generated BCP Liturgical Text Display -->
+                <div id="liturgyOutput" class="space-y-5 font-serif text-base leading-relaxed text-bcp-text flex-1">
+                    <!-- Populated dynamically by JavaScript -->
+                </div>
+
+                <!-- Footer Rubric -->
+                <div class="mt-8 pt-4 border-t border-bcp-gold/30 text-center">
+                    <p class="rubric text-xs">
+                        Here the Celebrant may add a concluding Collect.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Share Link & QR Modal -->
+    <div id="shareModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
+        <div class="bg-bcp-cream border-2 border-bcp-gold rounded-lg shadow-2xl max-w-lg w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-bcp-gold/40 pb-3">
+                <h3 class="font-serif font-bold text-xl text-bcp-maroon flex items-center gap-2">
+                    🔗 Shareable Parish Prayer Link
+                </h3>
+                <button onclick="closeShareModal()" class="text-gray-500 hover:text-bcp-maroon font-sans text-xl font-bold">&times;</button>
+            </div>
+            
+            <p class="font-sans text-xs text-gray-700 leading-relaxed">
+                This custom link contains all your current prayer intentions embedded directly in the URL. Share it with your ambo tablet, rector, or visiting lectors to load this exact list instantly on any device!
+            </p>
+
+            <div class="space-y-2">
+                <label class="font-sans text-xs font-bold uppercase text-bcp-maroon">Custom Direct URL</label>
+                <div class="flex gap-2">
+                    <input type="text" id="shareUrlInput" readonly class="flex-1 font-sans text-xs bg-white border border-gray-300 rounded p-2 text-gray-700 focus:outline-none select-all">
+                    <button onclick="copyShareUrl()" class="px-3 py-2 bg-bcp-maroon text-bcp-cream rounded font-sans text-xs font-bold hover:bg-bcp-lightMaroon transition">
+                        Copy Link
+                    </button>
+                </div>
+            </div>
+
+            <!-- Simple SVG QR Code Placeholder / Container -->
+            <div class="flex flex-col items-center justify-center p-4 bg-white rounded border border-gray-200">
+                <div id="qrcodeContainer" class="w-44 h-44 flex items-center justify-center bg-gray-50 border border-dashed border-gray-300 rounded text-center text-xs text-gray-500">
+                    Generating QR Code...
+                </div>
+                <span class="font-sans text-[10px] text-gray-500 mt-2">Scan with tablet camera to open list</span>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="closeShareModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded font-sans text-xs font-semibold hover:bg-gray-300">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        
+        // Application State
+        let currentForm = 'form3';
+        let parishData = {
+            bishops: "Justin, Archbishop of Canterbury; Michael, our Presiding Bishop; and Douglas, our Bishop",
+            clergy: "Fr. Thomas, Rector; and Mtr. Sarah, Assistant Priest",
+            leaders: "Joe, President of the United States; Eric, Governor; and all civil leaders",
+            sick: "Mary, Robert, David, Elizabeth, and all suffering from illness",
+            departed: "James Miller, Susan Vance, and all the faithful departed",
+            thanksgivings: "the birth of Lucas, and the wedding anniversary of John and Clara"
+        };
+
+        // Presets Storage Structure
+        let presets = {
+            "default": { name: "Default Parish List", data: { ...parishData } }
+        };
+
+        window.onload = function() {
+            // Load presets from LocalStorage
+            const savedPresets = localStorage.getItem('bcp_prayer_presets');
+            if (savedPresets) {
+                try {
+                    presets = JSON.parse(savedPresets);
+                } catch (e) {
+                    console.error("Failed to parse saved presets", e);
+                }
+            }
+
+            // Populate Presets Dropdown
+            updatePresetDropdown();
+
+            // Check if URL parameters exist for shared link
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('form') || urlParams.has('sick')) {
+                loadFromUrlParams(urlParams);
+                showToast("✨ Loaded prayer list from shared link!");
+            } else {
+                // Otherwise load active local storage state
+                const savedData = localStorage.getItem('bcp_current_prayer_data');
+                const savedForm = localStorage.getItem('bcp_current_form');
+                if (savedData) {
+                    try {
+                        parishData = JSON.parse(savedData);
+                    } catch (e) {}
+                }
+                if (savedForm) {
+                    currentForm = savedForm;
+                }
+            }
+
+            // Populate UI Inputs from current state
+            populateInputFields();
+            
+            // Select active form tab
+            selectForm(currentForm);
+        };
+
+        function selectForm(formId) {
+            currentForm = formId;
+            localStorage.setItem('bcp_current_form', currentForm);
+
+            // Highlight buttons
+            document.querySelectorAll('.form-btn').forEach(btn => {
+                btn.classList.remove('bg-bcp-maroon', 'text-bcp-cream');
+                btn.classList.add('bg-white', 'text-bcp-maroon');
+            });
+
+            const activeBtn = document.getElementById(`btn-${formId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-bcp-maroon');
+                activeBtn.classList.add('bg-bcp-maroon', 'text-bcp-cream');
+            }
+
+            // Render Liturgy text
+            renderLiturgy();
+        }
+
+        function populateInputFields() {
+            document.getElementById('input-bishops').value = parishData.bishops || '';
+            document.getElementById('input-clergy').value = parishData.clergy || '';
+            document.getElementById('input-leaders').value = parishData.leaders || '';
+            document.getElementById('input-sick').value = parishData.sick || '';
+            document.getElementById('input-departed').value = parishData.departed || '';
+            document.getElementById('input-thanksgivings').value = parishData.thanksgivings || '';
+        }
+
+        function handleInputChange() {
+            parishData.bishops = document.getElementById('input-bishops').value;
+            parishData.clergy = document.getElementById('input-clergy').value;
+            parishData.leaders = document.getElementById('input-leaders').value;
+            parishData.sick = document.getElementById('input-sick').value;
+            parishData.departed = document.getElementById('input-departed').value;
+            parishData.thanksgivings = document.getElementById('input-thanksgivings').value;
+
+            // Auto save state to LocalStorage
+            saveCurrentToLocalStorage();
+
+            // Re-render manuscript preview
+            renderLiturgy();
+        }
+
+        function saveCurrentToLocalStorage() {
+            localStorage.setItem('bcp_current_prayer_data', JSON.stringify(parishData));
+            const indicator = document.getElementById('saveStatusIndicator');
+            if (indicator) {
+                indicator.textContent = "Auto-saved to browser ✔";
+                setTimeout(() => {
+                    indicator.textContent = "Auto-saved to browser";
+                }, 2000);
+            }
+        }
+
+        function renderLiturgy() {
+            const container = document.getElementById('liturgyOutput');
+            const titleHeader = document.getElementById('previewHeaderTitle');
+            const desc = document.getElementById('formDescription');
+
+            let html = '';
+
+            // Form Title updates
+            const formNames = {
+                'form1': 'Form I',
+                'form2': 'Form II',
+                'form3': 'Form III',
+                'form4': 'Form IV',
+                'form5': 'Form V',
+                'form6': 'Form VI'
+            };
+            titleHeader.textContent = `Prayers of the People: ${formNames[currentForm]}`;
+
+            const b = parishData.bishops || '[Bishops]';
+            const c = parishData.clergy || '[Parish Clergy]';
+            const l = parishData.leaders || '[Leaders]';
+            const s = parishData.sick || '[Sick & Needy]';
+            const d = parishData.departed || '[Departed]';
+            const t = parishData.thanksgivings || '[Thanksgivings]';
+
+            switch (currentForm) {
+                case 'form3':
+                    desc.textContent = "Form III features fixed placement for Bishops and Clergy in the first petition, followed by peace, the nation, the suffering, and departed.";
+                    html = `
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> Father, we pray for your holy Catholic Church;<br>
+                        <strong class="text-bcp-maroon font-bold">People:</strong> That we all may be one.</p>
+                        
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> Grant that every member of the Church may truly and humbly serve you;<br>
+                        <strong class="text-bcp-maroon font-bold">People:</strong> That your Name may be glorified by all people.</p>
+
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> We pray for all bishops, priests, and deacons, especially <span class="font-bold underline decoration-bcp-gold">${b}</span>, and <span class="font-bold underline decoration-bcp-gold">${c}</span>;<br>
+                        <strong class="text-bcp-maroon font-bold">People:</strong> That they may be faithful ministers of your Word and Sacraments.</p>
+
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> We pray for all who govern and hold authority in the nations of the world, especially <span class="font-bold underline decoration-bcp-gold">${l}</span>;<br>
+                        <strong class="text-bcp-maroon font-bold">People:</strong> That there may be justice and peace on the earth.</p>
+
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> Give us grace to do your will in all that we undertake;<br>
+                        <strong class="text-bcp-maroon font-bold">People:</strong> That our works may find favor in your sight.</p>
+
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> Have compassion on those who suffer from any grief or trouble, especially <span class="font-bold underline decoration-bcp-gold">${s}</span>;<br>
+                        <strong class="text-bcp-maroon font-bold">People:</strong> That they may be delivered from their distress.</p>
+
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> Give to the departed eternal rest, especially <span class="font-bold underline decoration-bcp-gold">${d}</span>;<br>
+                        <strong class="text-bcp-maroon font-bold">People:</strong> Let light perpetual shine upon them.</p>
+
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> We praise you for your saints who have entered into joy;<br>
+                        <strong class="text-bcp-maroon font-bold">People:</strong> May we also come to share in your heavenly kingdom.</p>
+
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> We offer our thanksgivings for <span class="font-bold underline decoration-bcp-gold">${t}</span>. Let us pray for our own needs and those of others.</p>
+                    `;
+                    break;
+
+                case 'form1':
+                    desc.textContent = "Form I uses responsive petitions ending with 'Lord, in your mercy / Hear our prayer'.";
+                    html = `
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> With all our heart and with all our mind, let us pray to the Lord, saying, "Lord, have mercy."</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For the peace from above, for the loving-kindness of God, and for the salvation of our souls, let us pray to the Lord.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, have mercy.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For <span class="font-bold underline decoration-bcp-gold">${b}</span>, for <span class="font-bold underline decoration-bcp-gold">${c}</span>, and for all the clergy and people, let us pray to the Lord.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, have mercy.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For our President <span class="font-bold underline decoration-bcp-gold">${l}</span>, for the leaders of the nations, and for all in authority, let us pray to the Lord.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, have mercy.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For those who are sick, suffering, or in any distress, especially <span class="font-bold underline decoration-bcp-gold">${s}</span>, let us pray to the Lord.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, have mercy.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For all who have died in the hope of the resurrection, especially <span class="font-bold underline decoration-bcp-gold">${d}</span>, let us pray to the Lord.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, have mercy.</p>
+                    `;
+                    break;
+
+                case 'form2':
+                    desc.textContent = "Form II features a solemn litany with silence between petitions.";
+                    html = `
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> I ask your prayers for God's people throughout the world; for our Bishops <span class="font-bold underline decoration-bcp-gold">${b}</span>; for this gathering; and for all ministers and people. Pray for the Church.</p>
+                        <p class="rubric text-xs border-l-2 border-bcp-gold pl-2">Silence</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> I ask your prayers for peace; for goodwill among nations; and for the well-being of all people, remembering <span class="font-bold underline decoration-bcp-gold">${l}</span>. Pray for justice and peace.</p>
+                        <p class="rubric text-xs border-l-2 border-bcp-gold pl-2">Silence</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> I ask your prayers for the poor, the sick, the hungry, the oppressed, and those in prison, especially <span class="font-bold underline decoration-bcp-gold">${s}</span>. Pray for those in any need or trouble.</p>
+                        <p class="rubric text-xs border-l-2 border-bcp-gold pl-2">Silence</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> I ask your prayers for all who have died, especially <span class="font-bold underline decoration-bcp-gold">${d}</span>. Pray for those who have died.</p>
+                    `;
+                    break;
+
+                case 'form4':
+                    desc.textContent = "Form IV is a structured dialogue opening with 'Let us pray for the Church and for the world.'";
+                    html = `
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> Let us pray for the Church and for the world.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> Grant, Almighty God, that all who confess your Name may be united in your truth, live together in your love, and reveal your glory in the world. We pray for <span class="font-bold underline decoration-bcp-gold">${b}</span> and <span class="font-bold underline decoration-bcp-gold">${c}</span>.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, in your mercy / Hear our prayer.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> Guide the people of this land, and of all the nations, in the ways of justice and peace, remembering <span class="font-bold underline decoration-bcp-gold">${l}</span>.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, in your mercy / Hear our prayer.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> Comfort and heal all those who suffer in body, mind, or spirit, especially <span class="font-bold underline decoration-bcp-gold">${s}</span>.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, in your mercy / Hear our prayer.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> We commend to your mercy all who have died, especially <span class="font-bold underline decoration-bcp-gold">${d}</span>.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, in your mercy / Hear our prayer.</p>
+                    `;
+                    break;
+
+                case 'form5':
+                    desc.textContent = "Form V includes responsive petitions for the parish community and global mission.";
+                    html = `
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For the holy Church of God, that it may be filled with truth and love, and be found without fault at the day of your coming, we pray to you, O Lord.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, hear our prayer.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For <span class="font-bold underline decoration-bcp-gold">${b}</span>, for <span class="font-bold underline decoration-bcp-gold">${c}</span>, and for all ministers in your Church, we pray to you, O Lord.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, hear our prayer.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For all who fear God and believe in you, Lord Christ, that our divisions may cease, we pray to you, O Lord.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, hear our prayer.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For the sick and suffering, especially <span class="font-bold underline decoration-bcp-gold">${s}</span>, we pray to you, O Lord.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, hear our prayer.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For those who have died, especially <span class="font-bold underline decoration-bcp-gold">${d}</span>, we pray to you, O Lord.<br><strong class="text-bcp-maroon font-bold">People:</strong> Lord, hear our prayer.</p>
+                    `;
+                    break;
+
+                case 'form6':
+                    desc.textContent = "Form VI includes a general confession element and intercessions for peace and deliverance.";
+                    html = `
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> In peace, we pray to you, Lord God.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For all people in their daily life and work; for our families, friends, and neighbors.<br><strong class="text-bcp-maroon font-bold">People:</strong> For this community, the nation, and the world.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For <span class="font-bold underline decoration-bcp-gold">${l}</span>, and all who hold authority in the nations.<br><strong class="text-bcp-maroon font-bold">People:</strong> For justice, peace, and freedom.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For <span class="font-bold underline decoration-bcp-gold">${s}</span>, and all who are in danger, sorrow, or any kind of trouble.<br><strong class="text-bcp-maroon font-bold">People:</strong> For those who minister to the sick, the friendless, and the needy.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For <span class="font-bold underline decoration-bcp-gold">${b}</span> and <span class="font-bold underline decoration-bcp-gold">${c}</span>, and for all who serve God in his Church.<br><strong class="text-bcp-maroon font-bold">People:</strong> For all who proclaim the Gospel of God.</p>
+                        <p><strong class="text-bcp-maroon font-bold">Leader:</strong> For <span class="font-bold underline decoration-bcp-gold">${d}</span>, and for all who have died.<br><strong class="text-bcp-maroon font-bold">People:</strong> Rest eternal grant unto them, O Lord.</p>
+                    `;
+                    break;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function updatePresetDropdown() {
+            const select = document.getElementById('presetSelect');
+            select.innerHTML = '';
+            for (let key in presets) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = presets[key].name;
+                select.appendChild(opt);
+            }
+        }
+
+        function loadSelectedPreset() {
+            const key = document.getElementById('presetSelect').value;
+            if (presets[key]) {
+                parishData = { ...presets[key].data };
+                populateInputFields();
+                saveCurrentToLocalStorage();
+                renderLiturgy();
+                showToast(`Loaded preset: ${presets[key].name}`);
+            }
+        }
+
+        function saveNewPreset() {
+            const name = prompt("Enter a name for this parish preset (e.g., 'St. Jude 10am', 'Wednesday Chapel'):");
+            if (!name) return;
+            const id = 'preset_' + Date.now();
+            presets[id] = {
+                name: name,
+                data: { ...parishData }
+            };
+            localStorage.setItem('bcp_prayer_presets', JSON.stringify(presets));
+            updatePresetDropdown();
+            document.getElementById('presetSelect').value = id;
+            showToast(`Saved preset: "${name}"`);
+        }
+
+        function deleteCurrentPreset() {
+            const select = document.getElementById('presetSelect');
+            const key = select.value;
+            if (key === 'default') {
+                alert("Cannot delete the default preset.");
+                return;
+            }
+            if (confirm(`Are you sure you want to delete preset "${presets[key].name}"?`)) {
+                delete presets[key];
+                localStorage.setItem('bcp_prayer_presets', JSON.stringify(presets));
+                updatePresetDropdown();
+                loadSelectedPreset();
+                showToast("Preset deleted");
+            }
+        }
+
+        function exportDataJSON() {
+            const payload = {
+                version: "1.0",
+                form: currentForm,
+                data: parishData,
+                exportedAt: new Date().toISOString()
+            };
+            const jsonStr = JSON.stringify(payload, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bcp-prayer-list-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("📥 Exported prayer list JSON file!");
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.data) {
+                        parishData = { ...parsed.data };
+                        if (parsed.form) currentForm = parsed.form;
+                        
+                        populateInputFields();
+                        selectForm(currentForm);
+                        saveCurrentToLocalStorage();
+                        showToast("📤 Successfully imported prayer list JSON!");
+                    } else {
+                        alert("Invalid JSON file format.");
+                    }
+                } catch (err) {
+                    alert("Error reading JSON file: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function openShareModal() {
+            const baseUrl = window.location.origin + window.location.pathname;
+            const params = new URLSearchParams();
+            
+            params.set('form', currentForm);
+            params.set('bishops', parishData.bishops);
+            params.set('clergy', parishData.clergy);
+            params.set('leaders', parishData.leaders);
+            params.set('sick', parishData.sick);
+            params.set('departed', parishData.departed);
+            params.set('thanks', parishData.thanksgivings);
+
+            const shareUrl = `${baseUrl}?${params.toString()}`;
+            document.getElementById('shareUrlInput').value = shareUrl;
+
+            // Generate simple visual QR code using free public API
+            const qrContainer = document.getElementById('qrcodeContainer');
+            const encodedUrl = encodeURIComponent(shareUrl);
+            qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodedUrl}" alt="QR Code" class="rounded shadow-sm">`;
+
+            document.getElementById('shareModal').classList.remove('hidden');
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.add('hidden');
+        }
+
+        function copyShareUrl() {
+            const input = document.getElementById('shareUrlInput');
+            input.select();
+            document.execCommand('copy');
+            showToast("🔗 Link copied to clipboard!");
+        }
+
+        function loadFromUrlParams(params) {
+            if (params.has('form')) currentForm = params.get('form');
+            if (params.has('bishops')) parishData.bishops = params.get('bishops');
+            if (params.has('clergy')) parishData.clergy = params.get('clergy');
+            if (params.has('leaders')) parishData.leaders = params.get('leaders');
+            if (params.has('sick')) parishData.sick = params.get('sick');
+            if (params.has('departed')) parishData.departed = params.get('departed');
+            if (params.has('thanks')) parishData.thanksgivings = params.get('thanks');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastNotification');
+            const msgEl = document.getElementById('toastMessage');
+            msgEl.textContent = msg;
+            
+            toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
